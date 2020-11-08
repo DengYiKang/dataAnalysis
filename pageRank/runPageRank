@@ -1,0 +1,7 @@
+#!/bin/bash
+max=40
+for i in $(seq 1 $max)
+do
+	echo "$i"
+	cat links.txt pg_val.txt | sort | ./MergeMapper.py | sort | ./MergeReducer.py | sort | ./CalMapper.py | sort | ./CalReducer.py > pg_val.txt
+done
