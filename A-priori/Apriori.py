@@ -144,53 +144,16 @@ def generateRule(L, support_data, min_confidence):
 
 if __name__ == "__main__":
     data_set = loadDataSet()
-    '''
-    print("Test")
-    # 数据库事务打印
-    for t in data_set:
-        print(t)
-    '''
-    '''
-    print("Test")
-    # 候选频繁1项集打印
-    C1 = createC1(data_set)
-    for item in C1:
-        print(item)
-    '''
-    '''
-    # 频繁1项集打印
-    print("Test")
-    L = generateL(data_set, 1, 0.2)
-    for item in L:
-        print(item)
-    '''
 
-    # 频繁k项集打印
-    print("Test")
-    L, support_data = generateL(data_set, 2, 0.2)
-    for item in L:
-        print(item)
-
-    '''
-    # 关联规则测试
-    print("Test")
     L, support_data = generateL(data_set, 3, 0.2)
     rule_list = generateRule(L, support_data, 0.7)
-    for item in support_data:
-        print(item, ": ", support_data[item])
-    print("-----------------------")
+    for Lk in L:
+        print("=" * 55)
+        print("frequent " + str(len(list(Lk)[0])) + "-itemsets\t\tsupport")
+        print("=" * 55)
+        for frequent_set in Lk:
+            print(frequent_set, support_data[frequent_set])
+    print()
+    print("Rules")
     for item in rule_list:
-        print(item[0], "=>", item[1], "'s conf:", item[2])
-    '''
-    # L, support_data = generateL(data_set, 3, 0.2)
-    # rule_list = generateRule(L, support_data, 0.7)
-    # for Lk in L:
-    #     print("=" * 55)
-    #     print("frequent " + str(len(list(Lk)[0])) + "-itemsets\t\tsupport")
-    #     print("=" * 55)
-    #     for frequent_set in Lk:
-    #         print(frequent_set, support_data[frequent_set])
-    # print()
-    # print("Rules")
-    # for item in rule_list:
-    #     print(item[0], "=>", item[1], "'s conf: ", item[2])
+        print(item[0], "=>", item[1], "'s conf: ", item[2])
