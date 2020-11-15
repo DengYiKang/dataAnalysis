@@ -46,7 +46,7 @@ def makeIndex(data_set):
 
 def resumeDataSet(indexed_data_set, index2data):
     """
-    将索引化的数据集恢复至原数据集
+    将索引化的数据集恢复至原数据集，注意这里的数据集是一维的
     :param indexed_data_set: 索引化数据集
     :param index2data: index-data dict()
     :return: data_set
@@ -165,6 +165,29 @@ def generateL(data_set, max_k, min_support):
     return L, support_data
 
 
+def generateLUsePcy(data_set, max_k, min_support):
+    """
+    2阶频繁集用pcy算法计算，高阶频繁集照常计算
+    :param data_set:数据库事务集
+    :param max_k:求的最高项目集为k项
+    :param min_support:最小支持度
+    :return:
+    """
+    buckets_len = 10
+    L1, vector, support_data = pcy.firstPass(data_set, buckets_len, min_support)
+    L2 = pcy.secondPass(data_set, L1, vector, support_data, buckets_len, min_support)
+    Lk_sub_1 = L2.copy()
+    L = []
+    L.append(L1)
+    L.append(L2)
+    for k in range(3, max_k + 1):
+        Ck = createCk(Lk_sub_1, k)
+        Lk = generateLkByCk(data_set, Ck, min_support, support_data)
+        Lk_sub_1 = Lk.copy()
+        L.append(Lk_sub_1)
+    return L, support_data
+
+
 def generateRule(L, support_data, min_confidence):
     """
     产生关联规则
@@ -192,6 +215,7 @@ if __name__ == "__main__":
     data_set = loadDataSet()
     indexed_data_set, index2data = makeIndex(data_set)
     L, support_data = generateL(indexed_data_set, 3, 0.01)
+    # L, support_data=generateLUsePcy(indexed_data_set, 3, 0.01)
     rule_list = generateRule(L, support_data, 0.07)
     for Lk in L:
         print("=" * 55)

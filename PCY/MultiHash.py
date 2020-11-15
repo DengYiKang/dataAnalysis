@@ -1,16 +1,16 @@
 import itertools
+import csv
 
 
 def loadDataSet():
-    data_set = [['e1', 'e2', 'e5'],
-                ['e2', 'e4'],
-                ['e2', 'e3'],
-                ['e1', 'e2', 'e4'],
-                ['e1', 'e3'],
-                ['e2', 'e3'],
-                ['e1', 'e3'],
-                ['e1', 'e2', 'e3', 'e5'],
-                ['e1', 'e2', 'e3']]
+    data_set = list()
+    with open('Groceries.csv', 'r') as f:
+        reader = csv.reader(f)
+        result = list(reader)
+        for term in result:
+            str = term[1]
+            tmp_list = str[1:-1].split(',')
+            data_set.append(tmp_list)
     return data_set
 
 
@@ -198,12 +198,12 @@ def generateSecondVector(data_set, L1, first_vector, first_buckets_len, second_b
 
 def firstPass(data_set, first_buckets_len, second_buckets_len, min_support):
     """
-    first pass，返回频繁1项集L1, first vector, second vector
+    first pass，返回频繁1项集L1, first vector, second vector, support_data
     :param data_set: 索引化后的数据集
     :param first_buckets_len: 第一种桶的数量
     :param second_buckets_len: 第二种桶的数量
     :param min_support: support阈值
-    :return:L1, first vector, second_vector
+    :return:L1, first vector, second_vector, support_data
     """
     C1 = createC1(data_set)
     support_data = dict()
@@ -211,38 +211,42 @@ def firstPass(data_set, first_buckets_len, second_buckets_len, min_support):
     L1 = generateLkByCk(data_set, C1, min_support, support_data)
     first_vector = generateVector(data_set, first_buckets_len, min_support, 1)
     second_vector = generateVector(data_set, second_buckets_len, min_support, 2)
-    return L1, first_vector, second_vector
+    return L1, first_vector, second_vector, support_data
 
 
-def secondPass(data_set, L1, first_vector, second_vector, first_buckets_len, second_buckets_len, min_support):
+def secondPass(data_set, L1, first_vector, second_vector, support_data, first_buckets_len, second_buckets_len,
+               min_support):
     """
     second pass，返回频繁2项集L2
     :param data_set: 索引化后的数据集
     :param L1: 频繁1项集
     :param first_vector: 第一种向量
     :param second_vector: 第二种向量
+    :param support_data: 项目集-支持度dict
     :param first_buckets_len: 第一种桶的数量
     :param second_buckets_len: 第二种桶的数量
     :param min_support: support阈值
     :return:L2
     """
     C2 = generateC2(data_set, L1, first_vector, second_vector, first_buckets_len, second_buckets_len)
-    support_data = dict()
     L2 = generateLkByCk(data_set, C2, min_support, support_data)
     return L2
 
 
 def test():
-    first_buckets_len = 4
-    second_buckets_len = 4
-    min_support = 0.2
+    first_buckets_len = 10
+    second_buckets_len = 10
+    min_support = 0.01
     data_set = loadDataSet()
     indexed_data_set, index2data = makeIndex(data_set)
-    L1, first_vector, second_vector = firstPass(indexed_data_set, first_buckets_len, second_buckets_len, min_support)
+    L1, first_vector, second_vector, support_data = firstPass(indexed_data_set, first_buckets_len, second_buckets_len,
+                                                              min_support)
     L2 = secondPass(indexed_data_set, L1, first_vector, second_vector,
-                    first_buckets_len, second_buckets_len, min_support)
+                    support_data, first_buckets_len, second_buckets_len, min_support)
     L2_data = resumeDataSet(L2, index2data)
-    print(L2_data)
+    for term in L2_data:
+        print(term)
+    print(str(len(L2_data)))
 
 
 if __name__ == "__main__":

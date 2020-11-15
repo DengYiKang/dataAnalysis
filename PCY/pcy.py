@@ -150,32 +150,32 @@ def generateVector(data_set, buckets_len, min_support):
 
 def firstPass(data_set, buckets_len, min_support):
     """
-    first pass，返回频繁1项集L1与vector
+    first pass，返回频繁1项集L1，vector与support_data
     :param data_set:
     :param buckets_len:
     :param min_support:
-    :return:L1, vector
+    :return:L1, vector, support_data
     """
     C1 = createC1(data_set)
     support_data = dict()
     # 这里只是把support_data的引用传过去
     L1 = generateLkByCk(data_set, C1, min_support, support_data)
     vector = generateVector(data_set, buckets_len, min_support)
-    return L1, vector
+    return L1, vector, support_data
 
 
-def secondPass(data_set, L1, vector, buckets_len, min_support):
+def secondPass(data_set, L1, vector, support_data, buckets_len, min_support):
     """
     second pass，返回频繁2项集
     :param data_set: 数据集
     :param L1: 频繁1项集
     :param vector: 与buckets对应的vector
+    :param support_data: 项目集-支持度dict
     :param buckets_len: buckets个数
     :param min_support: support阈值
     :return:
     """
     C2 = generateC2(data_set, L1, vector, buckets_len)
-    support_data = dict()
     L2 = generateLkByCk(data_set, C2, min_support, support_data)
     return L2
 
@@ -185,10 +185,12 @@ def test():
     min_support = 0.01
     data_set = loadDataSet()
     indexed_data_set, index2data = makeIndex(data_set)
-    L1, vector = firstPass(indexed_data_set, buckets_len, min_support)
-    L2 = secondPass(indexed_data_set, L1, vector, buckets_len, min_support)
+    L1, vector, support_data = firstPass(indexed_data_set, buckets_len, min_support)
+    L2 = secondPass(indexed_data_set, L1, vector, support_data, buckets_len, min_support)
     L2_data = resumeDataSet(list(L2), index2data)
-    print(L2_data)
+    for term in L2_data:
+        print(term)
+    print(str(len(L2_data)))
 
 
 if __name__ == "__main__":
