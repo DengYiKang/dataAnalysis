@@ -1,13 +1,24 @@
+import csv
+
+
 def loadDataSet():
-    data_set = [['e1', 'e2', 'e5'],
-                ['e2', 'e4'],
-                ['e2', 'e3'],
-                ['e1', 'e2', 'e4'],
-                ['e1', 'e3'],
-                ['e2', 'e3'],
-                ['e1', 'e3'],
-                ['e1', 'e2', 'e3', 'e5'],
-                ['e1', 'e2', 'e3']]
+    # data_set = [['e1', 'e2', 'e5'],
+    #             ['e2', 'e4'],
+    #             ['e2', 'e3'],
+    #             ['e1', 'e2', 'e4'],
+    #             ['e1', 'e3'],
+    #             ['e2', 'e3'],
+    #             ['e1', 'e3'],
+    #             ['e1', 'e2', 'e3', 'e5'],
+    #             ['e1', 'e2', 'e3']]
+    data_set = list()
+    with open('Groceries.csv', 'r') as f:
+        reader = csv.reader(f)
+        result = list(reader)
+        for term in result:
+            str = term[1]
+            tmp_list = str[1:-1].split(',')
+            data_set.append(tmp_list)
     return data_set
 
 
@@ -53,8 +64,8 @@ def createCk(Lk_sub_1, k):
     Ck = set()
     len_Lk_sub_1 = len(Lk_sub_1)
     list_Lk_sub_1 = list(Lk_sub_1)
-    for i in range(len_Lk_sub_1):  # i: [0, len_Lk_sub_1)
-        for j in range(i + 1, len_Lk_sub_1):  # j: [i+1, len_Lk_sub_1)
+    for i in range(len_Lk_sub_1):
+        for j in range(i + 1, len_Lk_sub_1):
             l1 = list(list_Lk_sub_1[i])
             l2 = list(list_Lk_sub_1[j])
             l1.sort()
@@ -79,7 +90,7 @@ def generateLkByCk(data_set, Ck, min_support, support_data):
     """
 
     Lk = set()
-    # 通过dict记录候选频繁k项集的事务支持个数
+    # 通过dict记录候选频繁k项集的事务支持个数，即出现次数
     item_count = {}
     for t in data_set:
         for Ck_item in Ck:
@@ -145,9 +156,12 @@ def generateRule(L, support_data, min_confidence):
 if __name__ == "__main__":
     data_set = loadDataSet()
 
-    L, support_data = generateL(data_set, 3, 0.2)
-    rule_list = generateRule(L, support_data, 0.7)
+    # 0.2 0.7
+    L, support_data = generateL(data_set, 3, 0.01)
+    rule_list = generateRule(L, support_data, 0.07)
     for Lk in L:
+        print("=" * 55)
+        print("total:" + str(len(Lk)))
         print("=" * 55)
         print("frequent " + str(len(list(Lk)[0])) + "-itemsets\t\tsupport")
         print("=" * 55)
@@ -155,5 +169,6 @@ if __name__ == "__main__":
             print(frequent_set, support_data[frequent_set])
     print()
     print("Rules")
+    print("total:" + str(len(rule_list)))
     for item in rule_list:
         print(item[0], "=>", item[1], "'s conf: ", item[2])

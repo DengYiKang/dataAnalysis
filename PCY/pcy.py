@@ -47,7 +47,7 @@ def resumeDataSet(indexed_data_set, index2data):
         tmp_list = list()
         for term in t:
             tmp_list.append(index2data[int(term)])
-        data_set.append(tmp_list)
+        data_set.append(frozenset(tmp_list))
     return data_set
 
 

@@ -47,7 +47,7 @@ def resumeDataSet(indexed_data_set, index2data):
         tmp_list = list()
         for term in t:
             tmp_list.append(index2data[int(term)])
-        data_set.append(tmp_list)
+        data_set.append(frozenset(tmp_list))
     return data_set
 
 
@@ -241,7 +241,7 @@ def test():
     L1, first_vector, second_vector = firstPass(indexed_data_set, first_buckets_len, second_buckets_len, min_support)
     L2 = secondPass(indexed_data_set, L1, first_vector, second_vector,
                     first_buckets_len, second_buckets_len, min_support)
-    L2_data = resumeDataSet(list(L2), index2data)
+    L2_data = resumeDataSet(L2, index2data)
     print(L2_data)
 
 
