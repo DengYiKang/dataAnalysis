@@ -17,3 +17,4 @@ if __name__ == "__main__":
     data = readFile('Groceries.csv')
     for term in data:
         print(term)
+

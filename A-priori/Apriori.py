@@ -1,4 +1,5 @@
 import csv
+from PCY import pcy
 
 
 def loadDataSet():
@@ -19,6 +20,40 @@ def loadDataSet():
             str = term[1]
             tmp_list = str[1:-1].split(',')
             data_set.append(tmp_list)
+    return data_set
+
+
+def makeIndex(data_set):
+    """
+    格式化数据集，将其元素用索引表示，索引从0开始
+    :param data_set: 原数据集
+    :return: 新数据集，index-data dict
+    """
+    index_data_set = list()
+    data2index = dict()
+    index2data = dict()
+    for t in data_set:
+        tmp_list = list()
+        for item in t:
+            if item not in data2index:
+                cur_index = len(data2index)
+                data2index[str(item)] = int(cur_index)
+                index2data[int(cur_index)] = str(item)
+            tmp_list.append(data2index[str(item)])
+        index_data_set.append(tmp_list)
+    return index_data_set, index2data
+
+
+def resumeDataSet(indexed_data_set, index2data):
+    """
+    将索引化的数据集恢复至原数据集
+    :param indexed_data_set: 索引化数据集
+    :param index2data: index-data dict()
+    :return: data_set
+    """
+    data_set = list()
+    for t in indexed_data_set:
+        data_set.append(index2data[int(t)])
     return data_set
 
 
@@ -155,9 +190,8 @@ def generateRule(L, support_data, min_confidence):
 
 if __name__ == "__main__":
     data_set = loadDataSet()
-
-    # 0.2 0.7
-    L, support_data = generateL(data_set, 3, 0.01)
+    indexed_data_set, index2data = makeIndex(data_set)
+    L, support_data = generateL(indexed_data_set, 3, 0.01)
     rule_list = generateRule(L, support_data, 0.07)
     for Lk in L:
         print("=" * 55)
@@ -166,9 +200,9 @@ if __name__ == "__main__":
         print("frequent " + str(len(list(Lk)[0])) + "-itemsets\t\tsupport")
         print("=" * 55)
         for frequent_set in Lk:
-            print(frequent_set, support_data[frequent_set])
+            print(resumeDataSet(frequent_set, index2data), support_data[frequent_set])
     print()
     print("Rules")
     print("total:" + str(len(rule_list)))
     for item in rule_list:
-        print(item[0], "=>", item[1], "'s conf: ", item[2])
+        print(resumeDataSet(item[0], index2data), "=>", resumeDataSet(item[1], index2data), "'s conf: ", item[2])

@@ -1,16 +1,16 @@
 import itertools
+import csv
 
 
 def loadDataSet():
-    data_set = [['e1', 'e2', 'e5'],
-                ['e2', 'e4'],
-                ['e2', 'e3'],
-                ['e1', 'e2', 'e4'],
-                ['e1', 'e3'],
-                ['e2', 'e3'],
-                ['e1', 'e3'],
-                ['e1', 'e2', 'e3', 'e5'],
-                ['e1', 'e2', 'e3']]
+    data_set = list()
+    with open('Groceries.csv', 'r') as f:
+        reader = csv.reader(f)
+        result = list(reader)
+        for term in result:
+            str = term[1]
+            tmp_list = str[1:-1].split(',')
+            data_set.append(tmp_list)
     return data_set
 
 
@@ -181,8 +181,8 @@ def secondPass(data_set, L1, vector, buckets_len, min_support):
 
 
 def test():
-    buckets_len = 4
-    min_support = 0.2
+    buckets_len = 10
+    min_support = 0.01
     data_set = loadDataSet()
     indexed_data_set, index2data = makeIndex(data_set)
     L1, vector = firstPass(indexed_data_set, buckets_len, min_support)
