@@ -1,13 +1,4 @@
-# coding: utf-8
-
-# # Assignment 3:  Recommendation systems
-#
-# Here we'll implement a content-based recommendation algorithm.
-# It will use the list of genres for a movie as the content.
-# The data come from the MovieLens project: http://grouplens.org/datasets/movielens/
-
-# Please only use these imports.
-from collections import Counter, defaultdict
+from collections import Counter
 import math
 import numpy as np
 import os
@@ -17,7 +8,7 @@ from scipy.sparse import csr_matrix
 
 
 def tokenize_string(my_string):
-    """ 正则过滤
+    """ 正则过滤, 返回my_string中所有的合法单词, 同时小写化, 类似split
     """
     return re.findall('[\w\-]+', my_string.lower())
 
