@@ -214,7 +214,9 @@ def generateRule(L, support_data, min_confidence):
 if __name__ == "__main__":
     data_set = loadDataSet()
     indexed_data_set, index2data = makeIndex(data_set)
+    # 未使用pcy
     L, support_data = generateL(indexed_data_set, 3, 0.01)
+    # 使用pcy
     # L, support_data=generateLUsePcy(indexed_data_set, 3, 0.01)
     rule_list = generateRule(L, support_data, 0.07)
     for Lk in L:
