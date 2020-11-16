@@ -14,29 +14,17 @@ import os
 import pandas as pd
 import re
 from scipy.sparse import csr_matrix
-import urllib.request
-import zipfile
-
-
-def download_data():
-    """ DONE. Download and unzip data.
-    """
-    url = 'https://www.dropbox.com/s/h9ubx22ftdkyvd5/ml-latest-small.zip?dl=1'
-    urllib.request.urlretrieve(url, 'ml-latest-small.zip')
-    zfile = zipfile.ZipFile('ml-latest-small.zip')
-    zfile.extractall()
-    zfile.close()
 
 
 def tokenize_string(my_string):
-    """ DONE. You should use this in your tokenize function.
+    """ 正则过滤
     """
     return re.findall('[\w\-]+', my_string.lower())
 
 
 def tokenize(movies):
     """
-    在movies的数据帧中加入新的列'tokens'，'tokens'属性为list，保存对应电影的类别
+    在movies的数据帧中加入新的列'tokens', 'tokens'属性为list, 保存对应电影的类别
 
     Params:
       movies...电影数据帧
@@ -57,25 +45,20 @@ def tokenize(movies):
 
 def featurize(movies):
     """
-    Append a new column to the movies DataFrame with header 'features'.
-    Each row will contain a csr_matrix of shape (1, num_features). Each
-    entry in this matrix will contain the tf-idf value of the term, as
-    defined in class:
+    在movies数据帧中加入新的列'features', 其属性为(1, num_features)大小的csr_matrix.
+    这个矩阵的每一个元素表示对应单词(这里为描述类别的词语)的tf-idf值
     tfidf(i, d) := tf(i, d) / max_k tf(k, d) * log10(N/df(i))
-    where:
-    i is a term
-    d is a document (movie)
-    tf(i, d) is the frequency of term i in document d
-    max_k tf(k, d) is the maximum frequency of any term in document d
-    N is the number of documents (movies)
-    df(i) is the number of unique documents containing term i
+    其中i是一个单词(描述类别的词语), d是一个文档(即电影), tf(i, d)为单词i在文档d中出现的次数,
+    max_k tf(k, d)为文档d(即电影)中所有种类的单词出现的最大次数
+    N是文档(即电影)的总数
+    df(i)是包含单词i(描述类别的词语)的文档(即电影)的总数
 
     Params:
-      movies...The movies DataFrame
+      movies...movies数据帧
     Returns:
-      A tuple containing:
-      - The movies DataFrame, which has been modified to include a column named 'features'.
-      - The vocab, a dict from term to int. Make sure the vocab is sorted alphabetically as in a2 (e.g., {'aardvark': 0, 'boy': 1, ...})
+      movies, vocab
+      movies为处理后的数据帧
+      vocab为一个字典，用于将单词映射到从0开始的整数序列
     """
 
     def tf(word, doc):
@@ -112,8 +95,8 @@ def featurize(movies):
 
 
 def train_test_split(ratings):
-    """DONE.
-    Returns a random split of the ratings matrix into a training and testing set.
+    """
+    生成训练集与测试集
     """
     test = set(range(len(ratings))[::1000])
     train = sorted(set(range(len(ratings))) - test)
@@ -123,51 +106,44 @@ def train_test_split(ratings):
 
 def cosine_sim(a, b):
     """
-    Compute the cosine similarity between two 1-d csr_matrices.
-    Each matrix represents the tf-idf feature vector of a movie.
+    计算余弦相似度, 这里的a, b是对应电影的tf-idf矩阵
     Params:
-      a...A csr_matrix with shape (1, number_features)
-      b...A csr_matrix with shape (1, number_features)
+      a...大小为(1, number_features)的csr_matrix
+      b...大小为(1, number_features)的csr_matrix
     Returns:
-      The cosine similarity, defined as: dot(a, b) / ||a|| * ||b||
-      where ||a|| indicates the Euclidean norm (aka L2 norm) of vector a.
+      余弦相似度 dot(a, b) / ||a|| * ||b||
     """
     v1 = a.toarray()[0]
     v2 = b.toarray()[0]
     return sum(i[0] * i[1] for i in zip(v1, v2)) / (
-                math.sqrt(sum([i * i for i in v1])) * math.sqrt(sum([i * i for i in v2])))
+            math.sqrt(sum([i * i for i in v1])) * math.sqrt(sum([i * i for i in v2])))
 
 
 def make_predictions(movies, ratings_train, ratings_test):
     """
-    Using the ratings in ratings_train, predict the ratings for each
-    row in ratings_test.
-
-    To predict the rating of user u for movie i: Compute the weighted average
-    rating for every other movie that u has rated.  Restrict this weighted
-    average to movies that have a positive cosine similarity with movie
-    i. The weight for movie m corresponds to the cosine similarity between m
-    and i.
-
-    If there are no other movies with positive cosine similarity to use in the
-    prediction, use the mean rating of the target user in ratings_train as the
-    prediction.
+    预测
 
     Params:
-      movies..........The movies DataFrame.
-      ratings_train...The subset of ratings used for making predictions. These are the "historical" data.
-      ratings_test....The subset of ratings that need to predicted. These are the "future" data.
+      movies..........movies数据帧
+      ratings_train...训练集
+      ratings_test....测试集
     Returns:
-      A numpy array containing one predicted rating for each element of ratings_test.
+      一个numpy数组, 包含对每组测试样例给出的预测评分
     """
     result = []
+    # 对测试集中的所有user进行遍历
     for index, row in ratings_test.iterrows():
+        # 获取到当前user的所有打过分的电影集mlist
         mlist = list(ratings_train.loc[ratings_train['userId'] == row['userId']]['movieId'])
+        # 获取到mlist中所有电影的features矩阵，与mlist中的电影id一一顺序对应
         csrlist = list(movies.loc[movies['movieId'].isin(mlist)]['features'])
+        # 获取到当前user的所有打分，其打分与mlist中的电影id一一顺序对应
         mrlist = list(ratings_train.loc[ratings_train['userId'] == row['userId']]['rating'])
+        # 获取到所有当前user已打过分的电影与当前测试的电影的余弦相似度
         cmlist = [cosine_sim(c, movies.loc[movies['movieId'] == row['movieId']]['features'].values[0]) for c in csrlist]
         wan = sum([v * mrlist[i] for i, v in enumerate(cmlist) if v > 0])
         wadlist = [i for i in cmlist if i > 0]
+        # 如果没有正的余弦相似度，那么用平均值代替
         if (len(wadlist) > 0):
             result.append(wan / sum(wadlist))
         else:
@@ -176,8 +152,8 @@ def make_predictions(movies, ratings_train, ratings_test):
 
 
 def mean_absolute_error(predictions, ratings_test):
-    """DONE.
-    Return the mean absolute error of the predictions.
+    """
+    计算绝对误差的均值
     """
     return np.abs(predictions - np.array(ratings_test.rating)).mean()
 
@@ -194,7 +170,7 @@ def main():
     print('%d training ratings; %d testing ratings' % (len(ratings_train), len(ratings_test)))
     predictions = make_predictions(movies, ratings_train, ratings_test)
     print('error=%f' % mean_absolute_error(predictions, ratings_test))
-    print(predictions[:10])
+    print(predictions)
 
 
 if __name__ == '__main__':
