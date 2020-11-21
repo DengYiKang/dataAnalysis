@@ -215,13 +215,11 @@ if __name__ == "__main__":
     data_set = loadDataSet()
     indexed_data_set, index2data = makeIndex(data_set)
     # 未使用pcy
-    L, support_data = generateL(indexed_data_set, 3, 0.01)
+    L, support_data = generateL(indexed_data_set, 4, 0.005)
     # 使用pcy
-    # L, support_data=generateLUsePcy(indexed_data_set, 3, 0.01)
+    # L, support_data=generateLUsePcy(indexed_data_set, 4, 0.005)
     rule_list = generateRule(L, support_data, 0.07)
     for Lk in L:
-        print("=" * 55)
-        print("total:" + str(len(Lk)))
         print("=" * 55)
         print("frequent " + str(len(list(Lk)[0])) + "-itemsets\t\tsupport")
         print("=" * 55)
@@ -229,6 +227,9 @@ if __name__ == "__main__":
             print(resumeDataSet(frequent_set, index2data), support_data[frequent_set])
     print()
     print("Rules")
-    print("total:" + str(len(rule_list)))
     for item in rule_list:
         print(resumeDataSet(item[0], index2data), "=>", resumeDataSet(item[1], index2data), "'s conf: ", item[2])
+
+    for Lk in L:
+        print("frequent " + str(len(list(Lk)[0])) + "-itemsets" + "tot:\t" + str(len(Lk)))
+    print("rules tot:\t" + str(len(rule_list)))
