@@ -181,8 +181,8 @@ def secondPass(data_set, L1, vector, support_data, buckets_len, min_support):
 
 
 def test():
-    buckets_len = 10
-    min_support = 0.01
+    buckets_len = 20
+    min_support = 0.005
     data_set = loadDataSet()
     indexed_data_set, index2data = makeIndex(data_set)
     L1, vector, support_data = firstPass(indexed_data_set, buckets_len, min_support)

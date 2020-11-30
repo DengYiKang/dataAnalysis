@@ -242,9 +242,9 @@ def thirdPass(data_set, L1, first_vector, second_vector, support_data, first_buc
 
 
 def test():
-    first_buckets_len = 10
-    second_buckets_len = 10
-    min_support = 0.01
+    first_buckets_len = 20
+    second_buckets_len = 20
+    min_support = 0.005
     data_set = loadDataSet()
     indexed_data_set, index2data = makeIndex(data_set)
     L1, first_vector, support_data = firstPass(indexed_data_set, first_buckets_len, min_support)

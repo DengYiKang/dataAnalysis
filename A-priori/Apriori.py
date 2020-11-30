@@ -173,8 +173,14 @@ def generateLUsePcy(data_set, max_k, min_support):
     :param min_support:最小支持度
     :return:
     """
-    buckets_len = 10
+    buckets_len = 30
     L1, vector, support_data = pcy.firstPass(data_set, buckets_len, min_support)
+    # 输出vector
+    for _ in range(0, buckets_len):
+        if _ == 0:
+            print("Vector:\t")
+        print(str((vector & (1 << _)) >> _) + '\t', end="")
+    print()
     L2 = pcy.secondPass(data_set, L1, vector, support_data, buckets_len, min_support)
     Lk_sub_1 = L2.copy()
     L = []
@@ -214,10 +220,12 @@ def generateRule(L, support_data, min_confidence):
 if __name__ == "__main__":
     data_set = loadDataSet()
     indexed_data_set, index2data = makeIndex(data_set)
+    # Groceries.csv 测试参数 4 0.005 0.5
+    # 小数据集 测试参数 3 0.2 0.7
     # 未使用pcy
-    L, support_data = generateL(indexed_data_set, 4, 0.005)
+    # L, support_data = generateL(indexed_data_set, 4, 0.005)
     # 使用pcy
-    # L, support_data=generateLUsePcy(indexed_data_set, 4, 0.005)
+    L, support_data = generateLUsePcy(indexed_data_set, 4, 0.005)
     rule_list = generateRule(L, support_data, 0.5)
     for Lk in L:
         print("=" * 55)
