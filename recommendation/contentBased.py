@@ -149,12 +149,51 @@ def mean_absolute_error(predictions, ratings_test):
     return np.abs(predictions - np.array(ratings_test.rating)).mean()
 
 
+def get_feature_matrix1(movies, vocab):
+    """
+    得到n*m的01特征矩阵,n为movies的数量，m为feature的数量
+
+    Params:
+      movies..........movies数据帧
+      vocab...类型映射表
+    Returns:
+      一个n*m的numpy数组
+    """
+    feature_list = []
+    for index, row in movies.iterrows():
+        current_list = [0 for _ in range(len(vocab))]
+        for t in row['tokens']:
+            if t in vocab:
+                current_list[vocab[t]] = 1
+        feature_list.append(current_list)
+    feature_matrix = np.asarray(feature_list)
+    return feature_matrix
+
+
+def get_feature_matrix2(movies, vocab):
+    feature_matrix = np.zeros((len(movies), len(vocab)))
+    for index, row in movies.iterrows():
+        feature = row['features'].toarray()[0]
+        feature_matrix[index] = feature[0]
+    return feature_matrix
+
+
+def get_sim_matrix(feature_matrix):
+    movies_len = feature_matrix.shape[0]
+    sim_matrix = np.zeros((movies_len, movies_len))
+    for x in range(movies_len):
+        for y in range(movies_len):
+            sim_matrix[x][y] = cosine_sim(feature_matrix[x], feature_matrix[y])
+    return sim_matrix
+
+
 def main():
     path = 'ml-latest-small'
     ratings = pd.read_csv(path + os.path.sep + 'ratings.csv')
     movies = pd.read_csv(path + os.path.sep + 'movies.csv')
     movies = tokenize(movies)
     movies, vocab = featurize(movies)
+    movies_map = {row['movieId']: index for index, row in movies.iterrows()}
     print('vocab:')
     print(sorted(vocab.items())[:10])
     ratings_train, ratings_test = train_test_split(ratings)
