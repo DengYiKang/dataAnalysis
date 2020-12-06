@@ -8,25 +8,26 @@ from scipy.sparse import csr_matrix
 
 
 def tokenize_string(my_string):
-    """ 正则过滤, 返回my_string中所有的合法单词, 同时小写化, 类似split
     """
+    正则过滤, 返回my_string中所有的合法单词, 同时小写化, 类似split
+    :param my_string:
+    :return:
+    """
+
     return re.findall('[\w\-]+', my_string.lower())
 
 
 def tokenize(movies):
     """
     在movies的数据帧中加入新的列'tokens', 'tokens'属性为list, 保存对应电影的类别
-
-    Params:
-      movies...电影数据帧
-    Returns:
-      处理后的电影数据帧
-
+    :param movies:电影数据帧
+    :return:处理后的电影数据帧
     >>> movies = pd.DataFrame([[123, 'Horror|Romance'], [456, 'Sci-Fi']], columns=['movieId', 'genres'])
     >>> movies = tokenize(movies)
     >>> movies['tokens'].tolist()
     [['horror', 'romance'], ['sci-fi']]
     """
+
     tokenlist = []
     for index, row in movies.iterrows():
         tokenlist.append(tokenize_string(row.genres))
@@ -44,12 +45,11 @@ def featurize(movies):
     N是文档(即电影)的总数
     df(i)是包含单词i(描述类别的词语)的文档(即电影)的总数
 
-    Params:
-      movies...movies数据帧
-    Returns:
-      movies, vocab
-      movies为处理后的数据帧
-      vocab为一个字典，用于将单词映射到从0开始的整数序列
+    :param movies:movies数据帧
+    :return:
+    (movies, vocab)
+    movies为处理后的数据帧
+    vocab为一个字典，用于将单词映射到从0开始的整数序列
     """
 
     def tf(word, doc):
@@ -62,7 +62,6 @@ def featurize(movies):
         return tf(word, doc) * math.log10((N / dfdict[word]))
 
     def getcsrmatrix(tokens, dfdict, N, vocab):
-        matrixRow_list = []
         matrixRow_list = np.zeros((1, len(vocab)), dtype='float')
         for t in tokens:
             if t in vocab:
@@ -95,43 +94,25 @@ def train_test_split(ratings):
     return ratings.iloc[train], ratings.iloc[test]
 
 
-def cosine_sim(a, b):
-    """
-    计算余弦相似度, 这里的a, b是对应电影的tf-idf矩阵
-    Params:
-      a...大小为(1, number_features)的csr_matrix
-      b...大小为(1, number_features)的csr_matrix
-    Returns:
-      余弦相似度 dot(a, b) / ||a|| * ||b||
-    """
-    v1 = a.toarray()[0]
-    v2 = b.toarray()[0]
-    return sum(i[0] * i[1] for i in zip(v1, v2)) / (
-            math.sqrt(sum([i * i for i in v1])) * math.sqrt(sum([i * i for i in v2])))
-
-
-def make_predictions(movies, ratings_train, ratings_test):
+def make_predictions(movies, ratings_train, ratings_test, sim_matrix, movies_map):
     """
     预测
-
-    Params:
-      movies..........movies数据帧
-      ratings_train...训练集
-      ratings_test....测试集
-    Returns:
-      一个numpy数组, 包含对每组测试样例给出的预测评分
+    :param movies: movies数据帧
+    :param ratings_train: 测试集
+    :param ratings_test: 训练集
+    :param sim_matrix:相似度矩阵
+    :param movies_map:moviesId-index的映射表
+    :return:一个numpy数组, 包含对每组测试样例给出的预测评分
     """
     result = []
     # 对测试集中的所有user进行遍历
     for index, row in ratings_test.iterrows():
         # 获取到当前user的所有打过分的电影集mlist
         mlist = list(ratings_train.loc[ratings_train['userId'] == row['userId']]['movieId'])
-        # 获取到mlist中所有电影的features矩阵，与mlist中的电影id一一顺序对应
-        csrlist = list(movies.loc[movies['movieId'].isin(mlist)]['features'])
         # 获取到当前user的所有打分，其打分与mlist中的电影id一一顺序对应
         mrlist = list(ratings_train.loc[ratings_train['userId'] == row['userId']]['rating'])
         # 获取到所有当前user已打过分的电影与当前测试的电影的余弦相似度
-        cmlist = [cosine_sim(c, movies.loc[movies['movieId'] == row['movieId']]['features'].values[0]) for c in csrlist]
+        cmlist = [sim_matrix[movies_map[row['movieId']]][movies_map[otherId]] for otherId in mlist]
         wan = sum([v * mrlist[i] for i, v in enumerate(cmlist) if v > 0])
         wadlist = [i for i in cmlist if i > 0]
         # 如果没有正的余弦相似度，那么用平均值代替
@@ -152,12 +133,9 @@ def mean_absolute_error(predictions, ratings_test):
 def get_feature_matrix1(movies, vocab):
     """
     得到n*m的01特征矩阵,n为movies的数量，m为feature的数量
-
-    Params:
-      movies..........movies数据帧
-      vocab...类型映射表
-    Returns:
-      一个n*m的numpy数组
+    :param movies: movies数据帧
+    :param vocab:类型映射表
+    :return:一个n*m的numpy数组
     """
     feature_list = []
     for index, row in movies.iterrows():
@@ -171,20 +149,33 @@ def get_feature_matrix1(movies, vocab):
 
 
 def get_feature_matrix2(movies, vocab):
+    """
+    得到n*m的tf-idf特征矩阵,n为movies的数量,m为feature的数量
+    :param movies: movies数据帧
+    :param vocab:类型映射表
+    :return:一个n*m的numpy数组
+    """
     feature_matrix = np.zeros((len(movies), len(vocab)))
     for index, row in movies.iterrows():
         feature = row['features'].toarray()[0]
-        feature_matrix[index] = feature[0]
+        feature_matrix[index] = feature
     return feature_matrix
 
 
-def get_sim_matrix(feature_matrix):
-    movies_len = feature_matrix.shape[0]
-    sim_matrix = np.zeros((movies_len, movies_len))
-    for x in range(movies_len):
-        for y in range(movies_len):
-            sim_matrix[x][y] = cosine_sim(feature_matrix[x], feature_matrix[y])
-    return sim_matrix
+def get_cosine_sim(feature_matrix):
+    """
+    得到m*m的相似度矩阵,m为movies的数量
+    :param feature_matrix: 特征矩阵
+    :return: numpy的m*m的数组
+    """
+    similarity = np.dot(feature_matrix, feature_matrix.T)
+    square_mag = np.diag(similarity)
+    inv_square_mag = 1 / square_mag
+    inv_square_mag[np.isinf(inv_square_mag)] = 0
+    inv_mag = np.sqrt(inv_square_mag)
+    cosine = similarity * inv_mag
+    cosine = cosine.T * inv_mag
+    return cosine
 
 
 def main():
@@ -194,11 +185,12 @@ def main():
     movies = tokenize(movies)
     movies, vocab = featurize(movies)
     movies_map = {row['movieId']: index for index, row in movies.iterrows()}
+    sim_matrix = get_cosine_sim(get_feature_matrix2(movies, vocab))
     print('vocab:')
     print(sorted(vocab.items())[:10])
     ratings_train, ratings_test = train_test_split(ratings)
     print('%d training ratings; %d testing ratings' % (len(ratings_train), len(ratings_test)))
-    predictions = make_predictions(movies, ratings_train, ratings_test)
+    predictions = make_predictions(movies, ratings_train, ratings_test, sim_matrix, movies_map)
     print('error=%f' % mean_absolute_error(predictions, ratings_test))
     print(predictions)
 
