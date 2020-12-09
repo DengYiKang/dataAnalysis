@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import re
 from scipy.sparse import csr_matrix
+from recommendation import minihash
 
 
 def tokenize_string(my_string):
@@ -185,7 +186,10 @@ def main():
     movies = tokenize(movies)
     movies, vocab = featurize(movies)
     movies_map = {row['movieId']: index for index, row in movies.iterrows()}
-    sim_matrix = get_cosine_sim(get_feature_matrix2(movies, vocab))
+    # cosSim+tf-idf
+    # sim_matrix = get_cosine_sim(get_feature_matrix2(movies, vocab))
+    # miniHash
+    sim_matrix = minihash.miniHash(get_feature_matrix1(movies, vocab).T)
     print('vocab:')
     print(sorted(vocab.items())[:10])
     ratings_train, ratings_test = train_test_split(ratings)
