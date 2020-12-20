@@ -225,7 +225,7 @@ if __name__ == "__main__":
     # 未使用pcy
     # L, support_data = generateL(indexed_data_set, 4, 0.005)
     # 使用pcy
-    L, support_data = generateLUsePcy(indexed_data_set, 4, 0.005)
+    L, support_data = generateLUsePcy(indexed_data_set, 3, 0.005)
     rule_list = generateRule(L, support_data, 0.5)
     for Lk in L:
         print("=" * 55)

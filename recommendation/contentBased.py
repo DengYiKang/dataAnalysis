@@ -124,11 +124,11 @@ def make_predictions(movies, ratings_train, ratings_test, sim_matrix, movies_map
     return np.array(result)
 
 
-def mean_absolute_error(predictions, ratings_test):
+def sse(predictions, ratings_test):
     """
-    计算绝对误差的均值
+    计算SSE
     """
-    return np.abs(predictions - np.array(ratings_test.rating)).mean()
+    return np.abs(np.power(predictions - np.array(ratings_test.rating), 2)).sum()
 
 
 def get_feature_matrix1(movies, vocab):
@@ -181,7 +181,7 @@ def get_cosine_sim(feature_matrix):
 
 def main():
     path = 'ml-latest-small'
-    ratings = pd.read_csv(path + os.path.sep + 'ratings.csv')
+    # ratings = pd.read_csv(path + os.path.sep + 'ratings.csv')
     movies = pd.read_csv(path + os.path.sep + 'movies.csv')
     movies = tokenize(movies)
     movies, vocab = featurize(movies)
@@ -192,10 +192,12 @@ def main():
     sim_matrix = minihash.miniHash(get_feature_matrix1(movies, vocab).T)
     print('vocab:')
     print(sorted(vocab.items())[:10])
-    ratings_train, ratings_test = train_test_split(ratings)
+    ratings_train = pd.read_csv(path + os.path.sep + 'train_set.csv')
+    ratings_test = pd.read_csv(path + os.path.sep + 'test_set.csv')
+    # ratings_train, ratings_test = train_test_split(ratings)
     print('%d training ratings; %d testing ratings' % (len(ratings_train), len(ratings_test)))
     predictions = make_predictions(movies, ratings_train, ratings_test, sim_matrix, movies_map)
-    print('error=%f' % mean_absolute_error(predictions, ratings_test))
+    print('SSE=%f' % sse(predictions, ratings_test))
     print(predictions)
 
 
