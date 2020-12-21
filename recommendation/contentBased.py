@@ -99,8 +99,8 @@ def make_predictions(movies, ratings_train, ratings_test, sim_matrix, movies_map
     """
     预测
     :param movies: movies数据帧
-    :param ratings_train: 测试集
-    :param ratings_test: 训练集
+    :param ratings_train: 训练集
+    :param ratings_test: 测试集
     :param sim_matrix:相似度矩阵
     :param movies_map:moviesId-index的映射表
     :return:一个numpy数组, 包含对每组测试样例给出的预测评分
@@ -127,12 +127,12 @@ def make_predictions(movies, ratings_train, ratings_test, sim_matrix, movies_map
 def make_recommendation(user_id, movies, ratings_train, sim_matrix, movies_map, k):
     """
     对某个用户做前k个推荐
-    :param user_id:
-    :param movies:
-    :param ratings_train:
-    :param sim_matrix:
-    :param movies_map:
-    :param k:
+    :param user_id:用户id
+    :param movies:movies数据帧
+    :param ratings_train:训练集
+    :param sim_matrix:相似度矩阵
+    :param movies_map:moviesId-index的映射表
+    :param k:前k个推荐
     :return:
     """
     # 获取到当前user的所有打过分的电影集mlist
@@ -155,8 +155,8 @@ def make_recommendation(user_id, movies, ratings_train, sim_matrix, movies_map, 
                 result = np.mean(mrlist)
             rating_dict[movie_id] = result
     rating_sorted = sorted(rating_dict.items(), key=lambda x: x[1], reverse=True)
-    print(rating_sorted)
-    print("recommendation for" + "user " + str(user_id) + ":");
+    # print(rating_sorted)
+    print("recommendation for user " + str(user_id) + ":");
     for i in range(k):
         print("movie_id: " + str(rating_sorted[i][0]) + "; rating: " + str(rating_sorted[i][1]))
 
@@ -236,7 +236,7 @@ def main():
     predictions = make_predictions(movies, ratings_train, ratings_test, sim_matrix, movies_map)
     print('SSE=%f' % sse(predictions, ratings_test))
     print(predictions)
-    make_recommendation(4, movies, ratings_train, sim_matrix, movies_map)
+    make_recommendation(4, movies, ratings_train, sim_matrix, movies_map, 5)
 
 
 if __name__ == '__main__':
