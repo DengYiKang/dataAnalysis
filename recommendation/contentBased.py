@@ -124,11 +124,48 @@ def make_predictions(movies, ratings_train, ratings_test, sim_matrix, movies_map
     return np.array(result)
 
 
+def make_recommendation(user_id, movies, ratings_train, sim_matrix, movies_map, k):
+    """
+    对某个用户做前k个推荐
+    :param user_id:
+    :param movies:
+    :param ratings_train:
+    :param sim_matrix:
+    :param movies_map:
+    :param k:
+    :return:
+    """
+    # 获取到当前user的所有打过分的电影集mlist
+    mlist = list(ratings_train.loc[ratings_train['userId'] == user_id]['movieId'])
+    # 获取到当前user的所有打分，其打分与mlist中的电影id一一顺序对应
+    mrlist = list(ratings_train.loc[ratings_train['userId'] == user_id]['rating'])
+    movies_list = movies['movieId'].tolist()
+    rating_dict = {}
+    for movie_id in movies_list:
+        if movie_id not in mlist:
+            # 获取到所有当前user已打过分的电影与当前测试的电影的余弦相似度
+            cmlist = [sim_matrix[movies_map[movie_id]][movies_map[otherId]] for otherId in mlist]
+            wan = sum([v * mrlist[i] for i, v in enumerate(cmlist) if v > 0])
+            wadlist = [i for i in cmlist if i > 0]
+            result = 0
+            # 如果没有正的余弦相似度，那么用平均值代替
+            if (len(wadlist) > 0):
+                result = wan / sum(wadlist)
+            else:
+                result = np.mean(mrlist)
+            rating_dict[movie_id] = result
+    rating_sorted = sorted(rating_dict.items(), key=lambda x: x[1], reverse=True)
+    print(rating_sorted)
+    print("recommendation for" + "user " + str(user_id) + ":");
+    for i in range(k):
+        print("movie_id: " + str(rating_sorted[i][0]) + "; rating: " + str(rating_sorted[i][1]))
+
+
 def sse(predictions, ratings_test):
     """
     计算SSE
     """
-    return np.abs(np.power(predictions - np.array(ratings_test.rating), 2)).sum()
+    return np.power(predictions - np.array(ratings_test.rating), 2).sum()
 
 
 def get_feature_matrix1(movies, vocab):
@@ -190,8 +227,8 @@ def main():
     sim_matrix = get_cosine_sim(get_feature_matrix2(movies, vocab))
     # miniHash
     # sim_matrix = minihash.miniHash(get_feature_matrix1(movies, vocab).T)
-    print('vocab:')
-    print(sorted(vocab.items())[:10])
+    # print('vocab:')
+    # print(sorted(vocab.items())[:10])
     ratings_train = pd.read_csv(path + os.path.sep + 'train_set.csv')
     ratings_test = pd.read_csv(path + os.path.sep + 'test_set.csv')
     # ratings_train, ratings_test = train_test_split(ratings)
@@ -199,6 +236,7 @@ def main():
     predictions = make_predictions(movies, ratings_train, ratings_test, sim_matrix, movies_map)
     print('SSE=%f' % sse(predictions, ratings_test))
     print(predictions)
+    make_recommendation(4, movies, ratings_train, sim_matrix, movies_map)
 
 
 if __name__ == '__main__':
