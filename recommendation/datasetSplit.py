@@ -7,16 +7,20 @@ def main():
     ratings = pd.read_csv(path + os.path.sep + 'ratings.csv')
     u_list = ratings['userId'].tolist()
     u_firstline = {}
+    u_secondline = {}
     for index, term in enumerate(u_list):
         if term not in u_firstline:
             u_firstline[term] = index
+        elif term not in u_secondline:
+            u_secondline[term] = index
     u_set = set(u_list)
     u_dict = {item: u_list.count(item) for item in u_set}
     sorted_u = sorted(u_dict.items(), key=lambda x: x[1], reverse=True)
     print(sorted_u)
     test = []
-    for _ in range(100):
+    for _ in range(50):
         test.append(u_firstline[sorted_u[_][0]])
+        test.append(u_secondline[sorted_u[_][0]])
     print(test)
     train = sorted(set(range(len(ratings))) - set(test))
     test_df = ratings.iloc[test]

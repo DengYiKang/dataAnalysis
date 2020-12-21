@@ -187,9 +187,9 @@ def main():
     movies, vocab = featurize(movies)
     movies_map = {row['movieId']: index for index, row in movies.iterrows()}
     # cosSim+tf-idf
-    # sim_matrix = get_cosine_sim(get_feature_matrix2(movies, vocab))
+    sim_matrix = get_cosine_sim(get_feature_matrix2(movies, vocab))
     # miniHash
-    sim_matrix = minihash.miniHash(get_feature_matrix1(movies, vocab).T)
+    # sim_matrix = minihash.miniHash(get_feature_matrix1(movies, vocab).T)
     print('vocab:')
     print(sorted(vocab.items())[:10])
     ratings_train = pd.read_csv(path + os.path.sep + 'train_set.csv')
